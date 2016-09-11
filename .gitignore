@@ -2,3 +2,9 @@
 
 # Compiled Go
 *.a
+
+# Vim Swap Files
+*.swp
+
+# Go Executables
+go/bin/*
