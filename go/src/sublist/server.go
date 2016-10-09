@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
-	"net/http"
+	"regexp"
+
+	"github.com/valyala/fasthttp"
 )
 
 type Server struct {
@@ -15,14 +17,24 @@ func NewServer() *Server {
 }
 
 // Start runs a server
-// I'm following this tutorial:
-// https://golang.org/doc/articles/wiki/
 func (*Server) Start() {
 	fmt.Println("Starting a server")
-	http.HandleFunc("/", router)
-	http.ListenAndServe(":8080", nil)
+	fasthttp.ListenAndServe(":8080", router)
 }
 
-func router(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+// router Routes API Requests to the appropriate handler function
+func router(ctx *fasthttp.RequestCtx) {
+	// Route regexp
+	var root = regexp.MustCompile(`^\/$`)
+	var anyArgGiven = regexp.MustCompile(`^\/.+$`)
+
+	// Route matching
+	switch {
+	case anyArgGiven.MatchString(string(ctx.Path())):
+		fmt.Fprintf(ctx, "Hi there, I really love %s!\n", ctx.Path()[1:])
+	case root.MatchString(string(ctx.Path())):
+		fmt.Fprintf(ctx, "I've got to love something...\n")
+	default:
+		ctx.Error("not found", fasthttp.StatusNotFound)
+	}
 }
