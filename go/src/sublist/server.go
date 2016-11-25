@@ -28,23 +28,33 @@ func (server *Server) Route(ctx *fasthttp.RequestCtx) {
 	// Route URI regexp
 	var root = regexp.MustCompile(`^\/$`)
 	var anyArgGiven = regexp.MustCompile(`^\/.+$`)
+	var nodes = regexp.MustCompile(`^\/nodes\/?$`)
 
+	// Route matching
+	path := string(ctx.Path())
+	switch {
+	case root.MatchString(path):
+		fmt.Fprintf(ctx, "This is the root path\n")
+	case nodes.MatchString(path):
+		server.GetNodesHandler(ctx)
+	case anyArgGiven.MatchString(path):
+		fmt.Fprintf(ctx, "Hi there, I really love %s!\n", ctx.Path()[1:])
+	default:
+		ctx.Error("not found", fasthttp.StatusNotFound)
+	}
+}
+
+// GetNodesHandler returns all nodes present
+func (server *Server) GetNodesHandler(ctx *fasthttp.RequestCtx) {
 	nodes, err := server.db.GetNodes()
 	if err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+		return
 	}
 	defaultJSON, err := nodes.ToBytes()
 	if err != nil {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+		return
 	}
-
-	// Route matching
-	switch {
-	case anyArgGiven.MatchString(string(ctx.Path())):
-		fmt.Fprintf(ctx, "Hi there, I really love %s!\n", ctx.Path()[1:])
-	case root.MatchString(string(ctx.Path())):
-		fmt.Fprintf(ctx, "%s\n", defaultJSON)
-	default:
-		ctx.Error("not found", fasthttp.StatusNotFound)
-	}
+	fmt.Fprintf(ctx, "%s\n", defaultJSON)
 }
