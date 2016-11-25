@@ -34,7 +34,7 @@ func (server *Server) Route(ctx *fasthttp.RequestCtx) {
 	path := string(ctx.Path())
 	switch {
 	case root.MatchString(path):
-		fmt.Fprintf(ctx, "This is the root path\n")
+		server.RootHandler(ctx)
 	case nodes.MatchString(path):
 		server.GetNodesHandler(ctx)
 	case anyArgGiven.MatchString(path):
@@ -42,6 +42,11 @@ func (server *Server) Route(ctx *fasthttp.RequestCtx) {
 	default:
 		ctx.Error("not found", fasthttp.StatusNotFound)
 	}
+}
+
+// RootHandler returns a basic message
+func (server *Server) RootHandler(ctx *fasthttp.RequestCtx) {
+	fmt.Fprintf(ctx, "This is the root path\n")
 }
 
 // GetNodesHandler returns all nodes present
