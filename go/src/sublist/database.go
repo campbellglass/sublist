@@ -1,11 +1,16 @@
 package main
 
-type Database struct{}
+type Database struct {
+	root *Node
+}
 
 func NewDatabase() *Database {
-	return &Database{}
+	database := Database{
+		root: MakeTestSubList(),
+	}
+	return &database
 }
 
 func (db *Database) GetNodes() (*Node, error) {
-	return MakeTestSubList(), nil
+	return root, nil
 }
