@@ -26,22 +26,32 @@ func (server *Server) Start() {
 // Route Routes API Requests to the appropriate handler function
 func (server *Server) Route(ctx *fasthttp.RequestCtx) {
 	// Route URI regexp
-	var root = regexp.MustCompile(`^\/$`)
+	// Routes are ordered from most specific to least specific
+	nodes := NewEndpoint(`^\/nodes\/?$`, server.GetNodesHandler)
+	root := NewEndpoint(`^\/$`, server.RootHandler)
+
+	endpoints := []*Endpoint{
+		nodes,
+		root,
+	}
+
 	var anyArgGiven = regexp.MustCompile(`^\/.+$`)
-	var nodes = regexp.MustCompile(`^\/nodes\/?$`)
 
 	// Route matching
 	path := string(ctx.Path())
-	switch {
-	case root.MatchString(path):
-		server.RootHandler(ctx)
-	case nodes.MatchString(path):
-		server.GetNodesHandler(ctx)
-	case anyArgGiven.MatchString(path):
-		fmt.Fprintf(ctx, "Hi there, I really love %s!\n", ctx.Path()[1:])
-	default:
-		ctx.Error("not found", fasthttp.StatusNotFound)
+	for _, endpoint := range endpoints {
+		if endpoint.Regexp.MatchString(path) {
+			endpoint.Handler(ctx)
+			return
+		}
 	}
+
+	// Default cases
+	if anyArgGiven.MatchString(path) {
+		fmt.Fprintf(ctx, "Hi there, I really love %s!\n", ctx.Path()[1:])
+		return
+	}
+	ctx.Error("not found", fasthttp.StatusNotFound)
 }
 
 // RootHandler returns a basic message
