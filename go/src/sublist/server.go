@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/valyala/fasthttp"
 )
@@ -35,8 +34,6 @@ func (server *Server) Route(ctx *fasthttp.RequestCtx) {
 		root,
 	}
 
-	var anyArgGiven = regexp.MustCompile(`^\/.+$`)
-
 	// Route matching
 	path := string(ctx.Path())
 	for _, endpoint := range endpoints {
@@ -46,12 +43,8 @@ func (server *Server) Route(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	// Default cases
-	if anyArgGiven.MatchString(path) {
-		fmt.Fprintf(ctx, "Hi there, I really love %s!\n", ctx.Path()[1:])
-		return
-	}
-	ctx.Error("not found", fasthttp.StatusNotFound)
+	// Default case
+	ctx.Error(fmt.Sprintf("Invalid path: '%s'", path), fasthttp.StatusNotFound)
 }
 
 // RootHandler returns a basic message
