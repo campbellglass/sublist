@@ -48,7 +48,12 @@ func GetNodesHandler(server *Server, ctx *fasthttp.RequestCtx) {
 		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(ctx, "%s\n", defaultJSON)
+	prettyJSON, err := PrettyPrint(defaultJSON)
+	if err != nil {
+		ctx.Error(err.Error(), fasthttp.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(ctx, "%s\n", prettyJSON)
 }
 
 // RootHandler returns a basic message
